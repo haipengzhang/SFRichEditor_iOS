@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, " />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" type="text/css" href="normalize_style.css">
+    <link rel="stylesheet" type="text/css" href="wang_style.css">
+    <link rel="stylesheet" type="text/css" href="edit_style.css">
+</head>
+
+<body>
+<div id="editor—wrapper">
+    <div id="editor-toolbar"></div>
+    <div id="editor-text-area" style="padding:0px; margin:0px;"></div>
+</div>
+<script type="text/javascript" src="wang_editor_index.js"></script>
+
+<script>
+    const { createEditor } = window.wangEditor
+
+    const editorConfig = {
+        placeholder: '&nbsp;&nbsp;请在这里输入正文...',
+        onChange(editor) {
+          const html = editor.getHtml()
+          console.log('editor content', html)
+        }
+    }
+    const editor = createEditor({
+        selector: '#editor-text-area',
+        config: editorConfig,
+        mode: 'simple' // or 'simple'
+    })
+</script>
+
+<script>
+    // 写作业务相关
+    function getCommentByRichTextBgColor(parentNodeKey) {
+      try {
+        const key = parentNodeKey || '#w-e-textarea-1'
+        const parentNode = document.querySelector(key)
+        if (!parentNode) {
+          return
+        }
+        
+        let result = []
+        const resultObj = {}
+        const Nodes = Array.from(parentNode.querySelectorAll('*[style*="color: "]') || [])
+        var tops = new Array()
+        Nodes.forEach(item => {
+           if (item.style.color === 'transparent') {
+             return
+           }
+           // 生成位置数据等
+           const key = item.style.color
+           const rect = item.getBoundingClientRect()
+           if (!resultObj.hasOwnProperty(key)) {
+             resultObj[key] = {
+               postions: rect.top
+             }
+           }
+        })
+        
+        result = Object.keys(resultObj).map(key => {
+          const item = resultObj[key]
+          item.comment_id = key
+          return item
+        })
+        
+        var resultStr = JSON.stringify(result)
+        window.webkit.messageHandlers.jsm.postMessage("comment:" + resultStr)
+      } catch (e) {
+        console.log(e)
+      }
+    }
+    
+    // 高亮点评
+    function highlightByElementId(elementId) {
+      try {
+        const key = '#w-e-textarea-1'
+        const parentNode = document.querySelector(key)
+        if (!parentNode) {
+          return
+        }
+        const commentNodes = Array.from(parentNode.querySelectorAll('*[style*="background-color"]') || [])
+        for (var i = 0; i < commentNodes.length; i++) {
+            if (commentNodes[i].style.color == elementId) {
+                commentNodes[i].style.backgroundColor = 'rgba(192,74,74,0.25)'
+            } else {
+                commentNodes[i].style.backgroundColor = 'rgba(255,159,2,0.25)'
+            }
+        }
+        
+        console.log(tops)
+        return tops
+      } catch (e) {
+        console.log(e)
+        return
+      }
+    }
+    
+    // 编辑的时候获取所有图片，用于提交
+    function getImages() {
+     var imgs = document.getElementsByTagName('img');
+     var imgScr = ''
+     for(var i=0; i<imgs.length; i++) {
+         if (i == 0) {
+             imgScr = imgs[i].src
+         } else {
+             imgScr = imgScr +'***'+ imgs[i].src
+         }
+     }
+     return imgScr
+    }
+    
+</script>
+
+<script type="text/javascript" src="wang_app_editor.js"></script>
+</body>
+</html>
